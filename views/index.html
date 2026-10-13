@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sudoku Solver &amp; Validator | Full-Stack Engine</title>
+  <meta name="description" content="A modern, high-performance Sudoku Solver and Placement Validator featuring interactive constraint satisfaction and instant backtracking." />
+  <link id="favicon" rel="icon" href="https://cdn.freecodecamp.org/universal/favicons/favicon-32x32.png" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../public/style.css" type="text/css" />
+</head>
+
+<body>
+  <!-- Header Banner -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+          </svg>
+        </div>
+        <div>
+          <span class="badge-tag">FCC QA Project &bull; Engine v2.0</span>
+          <h1>Sudoku Solver</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          <span>Engine Online</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="container">
+      <!-- Left Panel: Puzzle Controller & String Input -->
+      <section class="panel form-container">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-number">01</span>
+            <h2>Puzzle Matrix Input</h2>
+          </div>
+          <span class="string-counter" id="char-counter">81 / 81 chars</span>
+        </div>
+
+        <p class="panel-description">
+          Provide an 81-character puzzle string containing numbers <code>1-9</code> and periods <code>.</code> for vacant cells, or pick a curated sample.
+        </p>
+
+        <!-- Curated Presets Bar -->
+        <div class="preset-bar">
+          <span class="preset-label">Presets:</span>
+          <div class="preset-buttons">
+            <button type="button" class="preset-btn" data-preset="0">Sample 1</button>
+            <button type="button" class="preset-btn" data-preset="1">Sample 2</button>
+            <button type="button" class="preset-btn" data-preset="2">Sample 3</button>
+            <button type="button" class="preset-btn" data-preset="3">Sample 4</button>
+            <button type="button" class="preset-btn" data-preset="4">Sample 5</button>
+            <button type="button" class="preset-btn btn-secondary" id="clear-board-btn">Clear</button>
+            <button type="button" class="preset-btn btn-secondary" id="reset-default-btn">Reset</button>
+          </div>
+        </div>
+
+        <!-- Solve Form Required by FCC -->
+        <form id="solve-form">
+          <div class="textarea-wrapper">
+            <textarea
+              rows="6"
+              cols="85"
+              id="text-input"
+              name="puzzle"
+              placeholder="Enter 81-character puzzle string (. for empty cells)..."
+              spellcheck="false"
+            ></textarea>
+            <button type="button" id="copy-string-btn" title="Copy to clipboard" class="copy-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
+
+          <div class="action-row">
+            <input type="button" value="Solve Puzzle" id="solve-button" class="btn-primary" />
+            <div id="error-msg" class="feedback-msg"></div>
+          </div>
+        </form>
+
+        <!-- Divider -->
+        <div class="section-divider"></div>
+
+        <!-- Placement Checker Form Required by FCC -->
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-number">02</span>
+            <h2>Placement Conflict Checker</h2>
+          </div>
+        </div>
+
+        <p class="panel-description">
+          Validate whether placing a candidate digit into a coordinate causes row, column, or 3x3 region conflicts. You can also click any cell on the grid!
+        </p>
+
+        <form id="check-form">
+          <div class="checker-inputs-grid">
+            <div class="input-field">
+              <label for="coord">Coordinate (A1 - I9)</label>
+              <input id="coord" class="checker" type="text" name="coordinate" placeholder="e.g. A2" maxlength="3" autocomplete="off" />
+            </div>
+            <div class="input-field">
+              <label for="val">Value (1 - 9)</label>
+              <input class="checker" type="text" id="val" name="value" placeholder="e.g. 3" maxlength="1" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="check-actions-row">
+            <input type="button" id="check-button" value="Check Placement" class="btn-accent" />
+          </div>
+        </form>
+
+        <!-- Output display required by FCC -->
+        <div class="result-box">
+          <div class="result-header">
+            <span>Response Payload</span>
+            <span id="response-status-badge" class="response-status">Ready</span>
+          </div>
+          <span id="error" class="json-output"><code>{ "status": "waiting for action" }</code></span>
+        </div>
+      </section>
+
+      <!-- Right Panel: Interactive 9x9 Sudoku Grid -->
+      <section class="panel grid-panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-number">03</span>
+            <h2>Interactive 9&times;9 Board</h2>
+          </div>
+          <div class="board-stats">
+            <span class="stat-pill" id="stat-clues">Clues: 0</span>
+            <span class="stat-pill" id="stat-empty">Empty: 81</span>
+          </div>
+        </div>
+
+        <div class="grid-instructions">
+          <span>&bull; Click any cell to inspect or select coordinate</span>
+          <span>&bull; Type 1-9 to input, Backspace to delete</span>
+        </div>
+
+        <div id="sudoku-grid-container">
+          <!-- Y-Axis Legend (A-I) -->
+          <div>
+            <table class="yAxisLegend">
+              <tr><td>A</td></tr>
+              <tr><td>B</td></tr>
+              <tr><td>C</td></tr>
+              <tr><td>D</td></tr>
+              <tr><td>E</td></tr>
+              <tr><td>F</td></tr>
+              <tr><td>G</td></tr>
+              <tr><td>H</td></tr>
+              <tr><td>I</td></tr>
+            </table>
+          </div>
+
+          <!-- Sudoku Grid Table -->
+          <div id="sudoku-grid">
+            <table class="xAxisLegend">
+              <tr>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+                <td>6</td>
+                <td>7</td>
+                <td>8</td>
+                <td>9</td>
+              </tr>
+            </table>
+            <table class="grid" id="main-grid-table">
+              <tbody>
+                <tr>
+                  <td class="A1 sudoku-input" title="A1"></td>
+                  <td class="A2 sudoku-input" title="A2"></td>
+                  <td class="A3 sudoku-input" title="A3"></td>
+                  <td class="A4 sudoku-input" title="A4"></td>
+                  <td class="A5 sudoku-input" title="A5"></td>
+                  <td class="A6 sudoku-input" title="A6"></td>
+                  <td class="A7 sudoku-input" title="A7"></td>
+                  <td class="A8 sudoku-input" title="A8"></td>
+                  <td class="A9 sudoku-input" title="A9"></td>
+                </tr>
+                <tr>
+                  <td class="B1 sudoku-input" title="B1"></td>
+                  <td class="B2 sudoku-input" title="B2"></td>
+                  <td class="B3 sudoku-input" title="B3"></td>
+                  <td class="B4 sudoku-input" title="B4"></td>
+                  <td class="B5 sudoku-input" title="B5"></td>
+                  <td class="B6 sudoku-input" title="B6"></td>
+                  <td class="B7 sudoku-input" title="B7"></td>
+                  <td class="B8 sudoku-input" title="B8"></td>
+                  <td class="B9 sudoku-input" title="B9"></td>
+                </tr>
+                <tr>
+                  <td class="C1 sudoku-input" title="C1"></td>
+                  <td class="C2 sudoku-input" title="C2"></td>
+                  <td class="C3 sudoku-input" title="C3"></td>
+                  <td class="C4 sudoku-input" title="C4"></td>
+                  <td class="C5 sudoku-input" title="C5"></td>
+                  <td class="C6 sudoku-input" title="C6"></td>
+                  <td class="C7 sudoku-input" title="C7"></td>
+                  <td class="C8 sudoku-input" title="C8"></td>
+                  <td class="C9 sudoku-input" title="C9"></td>
+                </tr>
+                <tr>
+                  <td class="D1 sudoku-input" title="D1"></td>
+                  <td class="D2 sudoku-input" title="D2"></td>
+                  <td class="D3 sudoku-input" title="D3"></td>
+                  <td class="D4 sudoku-input" title="D4"></td>
+                  <td class="D5 sudoku-input" title="D5"></td>
+                  <td class="D6 sudoku-input" title="D6"></td>
+                  <td class="D7 sudoku-input" title="D7"></td>
+                  <td class="D8 sudoku-input" title="D8"></td>
+                  <td class="D9 sudoku-input" title="D9"></td>
+                </tr>
+                <tr>
+                  <td class="E1 sudoku-input" title="E1"></td>
+                  <td class="E2 sudoku-input" title="E2"></td>
+                  <td class="E3 sudoku-input" title="E3"></td>
+                  <td class="E4 sudoku-input" title="E4"></td>
+                  <td class="E5 sudoku-input" title="E5"></td>
+                  <td class="E6 sudoku-input" title="E6"></td>
+                  <td class="E7 sudoku-input" title="E7"></td>
+                  <td class="E8 sudoku-input" title="E8"></td>
+                  <td class="E9 sudoku-input" title="E9"></td>
+                </tr>
+                <tr>
+                  <td class="F1 sudoku-input" title="F1"></td>
+                  <td class="F2 sudoku-input" title="F2"></td>
+                  <td class="F3 sudoku-input" title="F3"></td>
+                  <td class="F4 sudoku-input" title="F4"></td>
+                  <td class="F5 sudoku-input" title="F5"></td>
+                  <td class="F6 sudoku-input" title="F6"></td>
+                  <td class="F7 sudoku-input" title="F7"></td>
+                  <td class="F8 sudoku-input" title="F8"></td>
+                  <td class="F9 sudoku-input" title="F9"></td>
+                </tr>
+                <tr>
+                  <td class="G1 sudoku-input" title="G1"></td>
+                  <td class="G2 sudoku-input" title="G2"></td>
+                  <td class="G3 sudoku-input" title="G3"></td>
+                  <td class="G4 sudoku-input" title="G4"></td>
+                  <td class="G5 sudoku-input" title="G5"></td>
+                  <td class="G6 sudoku-input" title="G6"></td>
+                  <td class="G7 sudoku-input" title="G7"></td>
+                  <td class="G8 sudoku-input" title="G8"></td>
+                  <td class="G9 sudoku-input" title="G9"></td>
+                </tr>
+                <tr>
+                  <td class="H1 sudoku-input" title="H1"></td>
+                  <td class="H2 sudoku-input" title="H2"></td>
+                  <td class="H3 sudoku-input" title="H3"></td>
+                  <td class="H4 sudoku-input" title="H4"></td>
+                  <td class="H5 sudoku-input" title="H5"></td>
+                  <td class="H6 sudoku-input" title="H6"></td>
+                  <td class="H7 sudoku-input" title="H7"></td>
+                  <td class="H8 sudoku-input" title="H8"></td>
+                  <td class="H9 sudoku-input" title="H9"></td>
+                </tr>
+                <tr>
+                  <td class="I1 sudoku-input" title="I1"></td>
+                  <td class="I2 sudoku-input" title="I2"></td>
+                  <td class="I3 sudoku-input" title="I3"></td>
+                  <td class="I4 sudoku-input" title="I4"></td>
+                  <td class="I5 sudoku-input" title="I5"></td>
+                  <td class="I6 sudoku-input" title="I6"></td>
+                  <td class="I7 sudoku-input" title="I7"></td>
+                  <td class="I8 sudoku-input" title="I8"></td>
+                  <td class="I9 sudoku-input" title="I9"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Selected Cell Inspector Bar -->
+        <div class="active-cell-bar" id="active-cell-bar">
+          <div class="cell-tag">
+            <span>Active Cell:</span>
+            <strong id="active-cell-name">None</strong>
+          </div>
+          <div class="cell-context">
+            <span id="active-cell-region">Select a cell to view region &amp; constraints</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- API Reference Accordion -->
+    <section class="api-docs-section">
+      <div class="api-docs-card">
+        <div class="api-docs-header">
+          <h3>REST API Endpoints Reference</h3>
+          <span class="badge-tag">Backend Contracts</span>
+        </div>
+        <div class="api-grid">
+          <div class="api-endpoint-card">
+            <div class="api-method-badge post">POST</div>
+            <code>/api/solve</code>
+            <p>Submits a 81-character puzzle string to solve via recursive MRV backtracking.</p>
+            <div class="sample-code">
+              <strong>Request:</strong> <code>{ "puzzle": "..9..5..." }</code><br />
+              <strong>Success:</strong> <code>{ "solution": "129845..." }</code><br />
+              <strong>Error:</strong> <code>{ "error": "Puzzle cannot be solved" }</code>
+            </div>
+          </div>
+          <div class="api-endpoint-card">
+            <div class="api-method-badge post">POST</div>
+            <code>/api/check</code>
+            <p>Checks if placing candidate number in given cell conflicts with row, column, or 3x3 region.</p>
+            <div class="sample-code">
+              <strong>Request:</strong> <code>{ "puzzle": "...", "coordinate": "A2", "value": "3" }</code><br />
+              <strong>Success:</strong> <code>{ "valid": true }</code><br />
+              <strong>Conflict:</strong> <code>{ "valid": false, "conflict": ["row", "region"] }</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Sudoku Solver &bull; Quality Assurance Certification &bull; Built with Node.js &amp; Express</p>
+  </footer>
+
+  <script type="module" src="../public/index.js"></script>
+</body>
+</html>
