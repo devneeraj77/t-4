@@ -1,0 +1,487 @@
+[
+  {
+    "title": "Logic handles a valid puzzle string of 81 characters",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "solver.validate(validPuzzle)",
+          "true"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logic handles a puzzle string with invalid characters (not 1-9 or .)",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "deepEqual",
+        "args": [
+          "solver.validate(invalidCharPuzzle)",
+          "{ error: 'Invalid characters in puzzle' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logic handles a puzzle string that is not 81 characters in length",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "deepEqual",
+        "args": [
+          "solver.validate(shortPuzzle)",
+          "{ error: 'Expected puzzle to be 81 characters long' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logic handles a valid row placement",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "isTrue",
+        "args": [
+          "solver.checkRowPlacement(validPuzzle, 'A', 2, 3)"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logic handles an invalid row placement",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "isFalse",
+        "args": [
+          "solver.checkRowPlacement(validPuzzle, 'A', 2, 5)"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logic handles a valid column placement",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "isTrue",
+        "args": [
+          "solver.checkColPlacement(validPuzzle, 'A', 2, 3)"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logic handles an invalid column placement",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "isFalse",
+        "args": [
+          "solver.checkColPlacement(validPuzzle, 'A', 2, 2)"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logic handles a valid region (3x3 grid) placement",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "isTrue",
+        "args": [
+          "solver.checkRegionPlacement(validPuzzle, 'A', 2, 3)"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Logic handles an invalid region (3x3 grid) placement",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "isFalse",
+        "args": [
+          "solver.checkRegionPlacement(validPuzzle, 'A', 2, 1)"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Valid puzzle strings pass the solver",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "isString",
+        "args": [
+          "result"
+        ]
+      },
+      {
+        "method": "equal",
+        "args": [
+          "result.length",
+          "81"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Invalid puzzle strings fail the solver",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "isFalse",
+        "args": [
+          "solver.solve(unsolvablePuzzle)"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Solver returns the expected solution for an incomplete puzzle",
+    "context": " -> Unit Tests",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "solver.solve(validPuzzle)",
+          "validSolution"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Solve a puzzle with valid puzzle string: POST request to /api/solve",
+    "context": " -> Functional Tests -> POST /api/solve",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "property",
+        "args": [
+          "res.body",
+          "'solution'"
+        ]
+      },
+      {
+        "method": "equal",
+        "args": [
+          "res.body.solution",
+          "validSolution"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Solve a puzzle with missing puzzle string: POST request to /api/solve",
+    "context": " -> Functional Tests -> POST /api/solve",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Required field missing' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Solve a puzzle with invalid characters: POST request to /api/solve",
+    "context": " -> Functional Tests -> POST /api/solve",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Invalid characters in puzzle' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Solve a puzzle with incorrect length: POST request to /api/solve",
+    "context": " -> Functional Tests -> POST /api/solve",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Expected puzzle to be 81 characters long' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Solve a puzzle that cannot be solved: POST request to /api/solve",
+    "context": " -> Functional Tests -> POST /api/solve",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Puzzle cannot be solved' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with all fields: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "isTrue",
+        "args": [
+          "res.body.valid"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with single placement conflict: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "isFalse",
+        "args": [
+          "res.body.valid"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body.conflict",
+          "['row']"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with multiple placement conflicts: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "isFalse",
+        "args": [
+          "res.body.valid"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body.conflict",
+          "['row', 'region']"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with all placement conflicts: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "isFalse",
+        "args": [
+          "res.body.valid"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body.conflict",
+          "['row', 'column', 'region']"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with missing required fields: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Required field(s) missing' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with invalid characters: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Invalid characters in puzzle' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with incorrect length: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Expected puzzle to be 81 characters long' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with invalid placement coordinate: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Invalid coordinate' }"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Check a puzzle placement with invalid placement value: POST request to /api/check",
+    "context": " -> Functional Tests -> POST /api/check",
+    "state": "passed",
+    "assertions": [
+      {
+        "method": "equal",
+        "args": [
+          "res.status",
+          "200"
+        ]
+      },
+      {
+        "method": "deepEqual",
+        "args": [
+          "res.body",
+          "{ error: 'Invalid value' }"
+        ]
+      }
+    ]
+  }
+]

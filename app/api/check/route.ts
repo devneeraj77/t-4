@@ -2,26 +2,34 @@ import { SudokuSolver } from "@/controllers/sudoku-solver";
 
 const solver = new SudokuSolver();
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+};
+
 async function parseRequestBody(request: Request): Promise<Record<string, any>> {
-  const contentType = request.headers.get("content-type") || "";
   try {
-    if (contentType.includes("application/json")) {
-      return await request.json();
-    }
-    if (
-      contentType.includes("application/x-www-form-urlencoded") ||
-      contentType.includes("multipart/form-data")
-    ) {
-      const formData = await request.formData();
-      return Object.fromEntries(formData.entries());
-    }
     const text = await request.text();
+    if (!text || text.trim() === "") return {};
+
+    // 1. Try parsing JSON
     try {
-      return JSON.parse(text);
+      const parsed = JSON.parse(text);
+      if (typeof parsed === "object" && parsed !== null) {
+        return parsed;
+      }
     } catch {
-      const params = new URLSearchParams(text);
-      return Object.fromEntries(params.entries());
+      // Not JSON, continue to form-urlencoded
     }
+
+    // 2. Try parsing URLSearchParams (application/x-www-form-urlencoded)
+    const params = new URLSearchParams(text);
+    const result: Record<string, any> = {};
+    for (const [k, v] of params.entries()) {
+      result[k] = v;
+    }
+    return result;
   } catch {
     return {};
   }
@@ -40,27 +48,36 @@ export async function POST(request: Request) {
     coordinate === "" ||
     value === ""
   ) {
-    return Response.json({ error: "Required field(s) missing" });
+    return Response.json(
+      { error: "Required field(s) missing" },
+      { headers: corsHeaders }
+    );
   }
 
   // 2. Validate coordinate
   if (typeof coordinate !== "string" || !/^[a-i][1-9]$/i.test(coordinate)) {
-    return Response.json({ error: "Invalid coordinate" });
+    return Response.json({ error: "Invalid coordinate" }, { headers: corsHeaders });
   }
 
   // 3. Validate value
   if (!/^[1-9]$/.test(String(value))) {
-    return Response.json({ error: "Invalid value" });
+    return Response.json({ error: "Invalid value" }, { headers: corsHeaders });
   }
 
   // 4. Validate puzzle length
   if (typeof puzzle !== "string" || puzzle.length !== 81) {
-    return Response.json({ error: "Expected puzzle to be 81 characters long" });
+    return Response.json(
+      { error: "Expected puzzle to be 81 characters long" },
+      { headers: corsHeaders }
+    );
   }
 
   // 5. Validate puzzle characters
   if (/[^1-9.]/.test(puzzle)) {
-    return Response.json({ error: "Invalid characters in puzzle" });
+    return Response.json(
+      { error: "Invalid characters in puzzle" },
+      { headers: corsHeaders }
+    );
   }
 
   const row = coordinate[0].toUpperCase();
@@ -76,8 +93,15 @@ export async function POST(request: Request) {
   if (!validRegion) conflict.push("region");
 
   if (conflict.length === 0) {
-    return Response.json({ valid: true });
+    return Response.json({ valid: true }, { headers: corsHeaders });
   } else {
-    return Response.json({ valid: false, conflict });
+    return Response.json({ valid: false, conflict }, { headers: corsHeaders });
   }
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
 }
